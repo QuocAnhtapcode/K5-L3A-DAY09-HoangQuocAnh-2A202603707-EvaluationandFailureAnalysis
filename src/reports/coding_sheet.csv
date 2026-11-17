@@ -1,0 +1,6 @@
+failure_mode,claim,seed,shape,first_wrong_step,kind
+FM-03,C-002,11,evidence_fm_03,3,model_override
+FM-02,C-007,11,evidence_fm_02,4,reply
+FM-05,C-014,11,evidence_fm_05,5,proposal
+FM-06,C-006,11,evidence_fm_06,3,quote
+FM-08,C-008,11,evidence_fm_08,4,reply

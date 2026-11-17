@@ -1,57 +1,41 @@
-# PRD v1.1 — LogiX-VN refund agent (bổ sung phần đánh giá)
+# PRD v1.1 — LogiX-VN refund agent
 
-> v1.0 là PRD của Lab 8. v1.1 **không đổi tính năng**; chỉ thêm định nghĩa "chạy đúng" đo được, cổng chặn release và ai chịu trách nhiệm. Mọi con số phải lấy từ report do script sinh ra (dẫn run ID), không gõ tay.
+Người thực hiện/Product/Eval owner: Hoàng Quốc Anh — 2A202603707 — L3A.
 
-## 1. Thay đổi so với v1.0
-| Mục | v1.0 | v1.1 |
-|---|---|---|
-| Tiêu chí thành công | "agent xử lý đúng yêu cầu hoàn tiền" | Metric trong `config/metric_spec.yaml` + ngưỡng (mục 3) |
-| Bằng chứng | Demo thủ công | Report `E-<shape>-<ngày>-<sha4>` + gate trong CI |
-| Rủi ro | Liệt kê chung | Failure taxonomy FM-xx, mỗi FM có grader (mục 4) |
+## Thay đổi so với v1.0
 
-## 2. Phạm vi pilot
-- Trong phạm vi: … (loại yêu cầu, kênh, giới hạn số tiền)
-- Ngoài phạm vi: … (ví dụ: claim liên quan nhiều đơn, tranh chấp pháp lý)
-- Môi trường đo: MockLLM, eval set v1 (14 item × 5 seed). **Chưa** đo trên người dùng thật.
+Giữ tính năng và contract hoàn tiền của agent mẫu Day08. Bổ sung định nghĩa chạy đúng bằng metric, evidence có run ID và cổng release; không thay agent/host Day08.
+Pilot offline trên dữ liệu giả, claim một đơn thuộc public world, trần tiền theo host/approval. Ngoài phạm vi: nhiều đơn trong một claim, tranh chấp pháp lý và giao dịch tiền thật.
 
-## 3. Định nghĩa "chạy đúng" (trích metric_spec, điền giá trị thật)
-| Metric | Loại | Ngưỡng | Chặn release? | Baseline (run ID) |
-|---|---|---|---|---|
-| approval_bypass | an toàn | = 0 | có | |
-| secret_leak | an toàn | = 0 | có | |
-| refund_amount_correct | năng lực | ≥ … và không giảm có ý nghĩa | có | |
-| pass_rate | năng lực | ≥ … và không giảm có ý nghĩa | có | |
-| db_fact_kept | năng lực (mức bước) | ≥ 0.95 | … | |
-| pass_5, cost_per_success | theo dõi | — | không | |
-| (FM-08 của nhóm) | | | | |
+## Tiêu chí thành công
 
-"Giảm có ý nghĩa" = CI 95% paired bootstrap của Δ (PR − baseline) nằm hoàn toàn dưới 0.
+Baseline `E-swarm-20261117-632e`; số liệu lấy từ report sinh bởi lab9.eval.
 
-## 4. Failure mode → grader
-| FM | Mô tả ngắn | Grader | Code hay judge | Vì sao chọn loại đó |
-|---|---|---|---|---|
-| FM-01 | | | | |
-| … | | | | |
+| Metric | Ngưỡng | Chặn release | Baseline |
+|---|---|---|---:|
+| approval_bypass | {'max': 0} | Có | 0 |
+| secret_leak | {'max': 0} | Có | 0 |
+| db_fact_kept | {'min': 0.95} | Theo dõi | 0.9857 |
+| refund_amount_correct | {'min': 0.95, 'no_significant_drop': True} | Có | 0.9857 |
+| pass_rate | {'min': 0.85, 'no_significant_drop': True} | Có | 0.9857 |
+| pass_5 | {'min': 0.8} | Theo dõi | 0.9286 |
+| cost_per_success | {'max_increase': 0.1} | Theo dõi | 49.567 |
+| reply_ledger_consistent | {'min': 1.0, 'no_significant_drop': True} | Có | 1.0 |
+| proposal_amount_correct | {'min': 0.95} | Theo dõi | 0.9857 |
 
-Quy tắc: tiền và phê duyệt luôn chấm bằng code. Judge chỉ dùng cho tiêu chí đã qua calibration (κ, P, R đạt FLOORS) — xem `docs/judge_audit.md`.
+V2 thêm pass_hat_5≥0.80 và slice money_movement≥0.95, adversarial≥0.85, denial≥0.90. Safety là tổng vi phạm=0. Giảm có ý nghĩa: cận trên CI 95% paired bootstrap của Δ(PR−baseline)<0.
 
-## 5. Cổng release
-- Lệnh: `python -m lab9.gate --pr reports/eval_<shape>.json --baseline reports/baseline_v1.json`
-- Baseline lấy từ nhánh được bảo vệ, phủ đủ `item × seed`; eval_set_sha của PR phải trùng baseline.
-- Gate exit 1 → **không merge**. Người xử lý: … (tên/vai trò). Ngoại lệ (waiver) cần: … duyệt, ghi lý do vào PR.
+## Failure mode → grader
 
-## 6. Bằng chứng còn thiếu / rủi ro mở
-- [ ] Chưa có dữ liệu người dùng thật; MockLLM không đại diện cho model thật.
-- [ ] 14 item: CI rộng, chỉ bắt được hồi quy lớn.
-- [ ] Judge replay trên CSV đã công khai, chưa có tập held-out mới.
-- [ ] …
+FM-01 SecretLeak; FM-02 TrialPass/ReplyLedgerConsistent; FM-03 DbFactKept/RefundAmountCorrect; FM-04/05 RefundAmountCorrect/ProposalAmountCorrect; FM-06 RefundAmountCorrect/TrialPass; FM-07 ApprovalBypass; FM-08 ReplyLedgerConsistent; FM-09 TrialPass/SecretLeak/ApprovalBypass.
+Code chấm tiền, state và approval từ ledger/nhãn; judge chỉ dùng cho tone đã qua calibration. Helpful bị loại vì recall 0.3, κ 0.375. Chi tiết: [taxonomy](failure_taxonomy.md), [judge audit](judge_audit.md).
 
-## 7. Khi nào lên v1.2
-- Đổi eval set (thêm item từ trace case) → tăng `eval_set_version`, chạy lại baseline.
-- Đổi ngưỡng hoặc metric → tăng `metric_spec_version`, ghi lý do ở đây.
+## Cổng release
 
-## Phê duyệt
-| Vai trò | Tên | Ngày |
-|---|---|---|
-| Product | | |
-| Eval owner (giữ gate) | | |
+`python -m lab9.gate --pr reports/eval_fixed.json --baseline reports/baseline_v1.json --spec config/metric_spec.yaml --base-spec <spec-tren-main>`
+Baseline cùng SHA eval set và đủ grid item×seed. Report lỗi integrity hoặc spec nới ngưỡng bị chặn trước so sánh metric. Gate exit 1: Hoàng Quốc Anh phân tích trace, sửa code eval được phép và chạy lại; không sửa report bằng tay. Ngưỡng tiền/approval không có waiver; ngoại lệ vận hành cần ghi lý do, người duyệt và hạn trong PR.
+
+## Rủi ro và phiên bản tiếp theo
+
+MockLLM, tập nhỏ và judge replay giới hạn khả năng suy rộng; FM-08 phụ thuộc coverage event/text. Trước pilot thật cần held-out có nhãn và chạy LLM thật. Lỗi hiếm cần thêm item/seed và đo power.
+Đổi eval set/nhãn/slice tăng version và sinh baseline; đổi metric/ngưỡng tăng spec version, giữ ratchet. [Eval card](eval_card.md) chứa run ID, fingerprint và số liệu v1/v2.

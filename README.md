@@ -1,3 +1,23 @@
+# Bài cá nhân Day09 — Hoàng Quốc Anh — 2A202603707 — L3A
+
+Bài làm trên fork Day09 theo hướng dẫn cá nhân: nhập `src/` từ repo Day08 gốc của giảng viên, làm trên `starter/d09`, mở PR vào `main` trong fork này và bật GitHub Actions.
+
+- [Báo cáo cá nhân và checkpoint](docs/personal_submission.md)
+- [Eval card](docs/eval_card.md), [PRD v1.1](docs/PRD_v1.1.md)
+- [Failure taxonomy](docs/failure_taxonomy.md), [judge audit](docs/judge_audit.md), [trace case](docs/trace_case.md)
+- [Log tái lập](src/reports/lab9_validation.log), [nội dung PR](docs/lab9_pr_description.md)
+- [GitHub Actions](https://github.com/QuocAnhtapcode/K5-L3A-DAY09-HoangQuocAnh-2A202603707-EvaluationandFailureAnalysis/actions)
+
+```powershell
+python -m venv .venv
+./.venv/Scripts/python.exe -m pip install -r src/requirements.txt -r src/requirements-lab9.txt
+./.venv/Scripts/python.exe scripts/reproduce_lab9.py
+```
+
+Nguồn agent/host Day08 được kiểm bằng `python -m lab9.provenance --check` trong `src/`. Các shape workflow/single/orchestrator giữ nguyên starter; Lab09 dùng swarm tham chiếu và variant riêng.
+
+---
+
 # K5 · Day 9 · Lab — Evaluation & Failure Analysis (LogiX-VN)
 
 > Nối tiếp Lab 8. Lab 8 trả lời "agent có chạy không"; Lab 9 trả lời **"làm sao biết bản mới tốt hơn — và chặn được bản tệ trước khi merge"**.
