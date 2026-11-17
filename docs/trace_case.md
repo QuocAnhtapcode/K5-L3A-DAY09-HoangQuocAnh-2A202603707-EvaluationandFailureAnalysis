@@ -1,30 +1,15 @@
-# Trace case: từ trace tới quyết định sai đầu tiên
+# Trace case — C-002@11
 
-Một trace case trả lời một câu: **bước nào là bước sai đầu tiên**, và test nào sẽ bắt được nó lần sau.
+Người thực hiện: Hoàng Quốc Anh — 2A202603707 — L3A. Report `E-seeded_regression-20261117-632e`.
 
-```bash
-cd src
-python -m lab9.trace_case --shape seeded_regression --claim C-002 --seed 11
-python -m lab9.trace_case --shape fixed --claim C-002 --seed 11   # đối chứng
-```
-
-Lệnh in ra ba phần: các event trong trace (`reply`, `decision`, `model_override`, `error` …), ledger so với nhãn, và lý do của grader Lab 8.
-
-## Mẫu điền (mỗi nhóm 1 case, lấy từ trial đang fail trong report)
-
-| Trường | Nội dung |
+| Trường | Bằng chứng |
 |---|---|
-| Trial | `<shape> <claim>@<seed>`, run ID trong report |
-| Triệu chứng | Grader nào fail; reply nói gì so với ledger ghi gì |
-| Bước sai đầu tiên | Số thứ tự event + kind + trích payload (≤1 dòng) |
-| Vì sao là bước *đầu tiên* | Các bước trước đó đúng ra sao (dẫn số event) |
-| Failure mode | Mã FM-xx trong `docs/failure_taxonomy.md` |
-| Đối chứng | Cùng claim@seed trên shape `fixed`: bước đó khác thế nào |
-| Regression test | Tên test + grader/assert nào bắt được; đã thấy fail trên variant lỗi và pass trên `fixed` chưa |
-| Chưa chắc chắn | Điều trace không chứng minh được |
+| Triệu chứng | Seeded regression ghi 20000 VND, status resolved; nhãn 0 VND/denied |
+| Bước sai đầu tiên | Event 3, model_override, delay_days=5 |
+| Các bước trước | Handoff đúng allowlist; investigator đọc O-202 delay_days=2 và policy hiện hành |
+| Nguyên nhân | FM-03: tin ticket 5 ngày thay vì DB 2 ngày, tạo quyền hoàn phí không hợp lệ |
+| Đối chứng | Fixed không có override; ledger 0 VND, status denied; TrialPass và RefundAmountCorrect pass |
+| Regression test | tests/test_lab9_regressions.py::test_lab9_trace_case_first_wrong_step_ticket_over_db |
+| Phạm vi suy luận | Trace thể hiện quyết định và dữ kiện, không chứng minh suy nghĩ bên trong model |
 
-## Quy tắc
-
-- Đọc **ledger trước reply**: reply trôi chảy vẫn có thể đi kèm một khoản hoàn sai.
-- "Bước sai đầu tiên" phải dẫn số event cụ thể, không phải "agent bị nhầm".
-- Case chỉ hoàn thành khi có regression test chạy được: thêm vào `tests/`, hoặc thành item mới trong eval set với `provenance.from_trace`.
+Tái lập trong src/: `python -m lab9.trace_case --shape seeded_regression --claim C-002 --seed 11`, rồi thay shape bằng fixed.
